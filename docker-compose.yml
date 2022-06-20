@@ -1,0 +1,131 @@
+version: "3.8"
+
+services:
+  api_gateway_svc:
+    build:
+      context: ./api-gateway-svc
+      dockerfile: Dockerfile
+    container_name: "api_gateway_svc"
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./api-gateway-svc/pkg/config/envs/dev.env:/pkg/config/envs/dev.env"
+    depends_on:
+      - auth_svc
+      - product_svc
+      - order_svc
+    links:
+      - auth_svc
+      - product_svc
+      - order_svc
+    networks:
+      - go_grpc_micro_network
+
+  auth_db:
+    image: postgres:14.3-alpine
+    container_name: "auth_db"
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_DB=micro_auth
+      - POSTGRES_USER=user_auth
+      - POSTGRES_PASSWORD=123456
+    networks:
+      - go_grpc_micro_network
+    volumes:
+      - auth_db:/var/lib/postgresql/data
+
+  auth_svc:
+    build:
+      context: ./auth-svc
+      dockerfile: Dockerfile
+    container_name: "auth_svc"
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - "./auth-svc/pkg/config/envs/dev.env:/pkg/config/envs/dev.env"
+    depends_on:
+      - auth_db
+    links:
+      - auth_db
+    networks:
+      - go_grpc_micro_network
+
+  product_db:
+    image: postgres:14.3-alpine
+    container_name: "product_db"
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_DB=micro_product
+      - POSTGRES_USER=user_product
+      - POSTGRES_PASSWORD=123456
+    networks:
+      - go_grpc_micro_network
+    volumes:
+      - product_db:/var/lib/postgresql/data
+
+  product_svc:
+    build:
+      context: ./product-svc
+      dockerfile: Dockerfile
+    container_name: "product_svc"
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - "./product-svc/pkg/config/envs/dev.env:/pkg/config/envs/dev.env"
+    depends_on:
+      - product_db
+    links:
+      - product_db
+    networks:
+      - go_grpc_micro_network
+
+  order_db:
+    image: postgres:14.3-alpine
+    container_name: "order_db"
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_DB=micro_order
+      - POSTGRES_USER=user_order
+      - POSTGRES_PASSWORD=123456
+    networks:
+      - go_grpc_micro_network
+    volumes:
+      - order_db:/var/lib/postgresql/data
+
+  order_svc:
+    build:
+      context: ./order-svc
+      dockerfile: Dockerfile
+    container_name: "order_svc"
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - "./order-svc/pkg/config/envs/dev.env:/pkg/config/envs/dev.env"
+    depends_on:
+      - order_db
+      - product_svc
+    links:
+      - order_db
+      - product_svc
+    networks:
+      - go_grpc_micro_network
+
+volumes:
+  auth_db:
+  product_db:
+  order_db:
+
+networks:
+  go_grpc_micro_network:
+    driver: bridge
