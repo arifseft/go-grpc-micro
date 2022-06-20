@@ -1,7 +1,7 @@
 ## go-grpc-micro
 
 ### System Diagram
-```
+```mermaid
 graph TD
     A[Client] -->|HTTP| B{{API Gateway}}
     B -->|gRPC| C[Authentication Service]
