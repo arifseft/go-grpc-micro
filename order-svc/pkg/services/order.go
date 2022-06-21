@@ -65,7 +65,7 @@ func (s *Server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*
             Error: err.Error(),
         }, nil
     } else if res.Status == http.StatusConflict {
-        s.H.DB.Delete(&models.Order{}, order.Id)
+        s.OrderRepo.DeleteOrder(order.Id)
 
         return &pb.CreateOrderResponse{
             Status: http.StatusConflict,

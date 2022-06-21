@@ -12,7 +12,6 @@ type OrderRepositoryMock struct {
 }
 
 func (m *OrderRepositoryMock) CreateOrder(order *models.Order) (*models.Order, error) {
-
     args := m.Mock.Called(order)
 
     if args.Get(0) == nil {
@@ -21,4 +20,14 @@ func (m *OrderRepositoryMock) CreateOrder(order *models.Order) (*models.Order, e
     order.Id = 1
 
     return order, nil
+}
+
+func (m *OrderRepositoryMock) DeleteOrder(orderId int64) error {
+    args := m.Mock.Called(orderId)
+
+    if args.Get(0) == nil {
+        return errors.New("unexpected error")
+    }
+
+    return nil
 }

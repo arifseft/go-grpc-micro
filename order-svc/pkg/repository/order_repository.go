@@ -7,6 +7,7 @@ import (
 
 type IOrderRepository interface {
     CreateOrder(order *models.Order) (*models.Order, error)
+    DeleteOrder(orderId int64) error
 }
 
 type OrderRepository struct {
@@ -21,4 +22,14 @@ func (r *OrderRepository) CreateOrder(order *models.Order) (*models.Order, error
     }
 
     return order, nil
+}
+
+func (r *OrderRepository) DeleteOrder(orderId int64) error {
+    result := r.H.DB.Delete(&models.Order{}, orderId)
+
+    if result.Error != nil {
+        return result.Error
+    }
+
+    return nil
 }
