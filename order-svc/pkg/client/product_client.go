@@ -8,6 +8,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+type IProductServiceClient interface {
+    FindOne(req *pb.FindOneRequest) (*pb.FindOneResponse, error)
+    DecreaseStock(req *pb.DecreaseStockRequest) (*pb.DecreaseStockResponse, error)
+}
+
 type ProductServiceClient struct {
     Client pb.ProductServiceClient
 }
@@ -26,19 +31,10 @@ func InitProductServiceClient(url string) ProductServiceClient {
     return c
 }
 
-func (c *ProductServiceClient) FindOne(productId int64) (*pb.FindOneResponse, error) {
-    req := &pb.FindOneRequest{
-        Id: productId,
-    }
-
+func (c *ProductServiceClient) FindOne(req *pb.FindOneRequest) (*pb.FindOneResponse, error) {
     return c.Client.FindOne(context.Background(), req)
 }
 
-func (c *ProductServiceClient) DecreaseStock(productId int64, orderId int64) (*pb.DecreaseStockResponse, error) {
-    req := &pb.DecreaseStockRequest{
-        Id: productId,
-        OrderId: orderId,
-    }
-
+func (c *ProductServiceClient) DecreaseStock(req *pb.DecreaseStockRequest) (*pb.DecreaseStockResponse, error) {
     return c.Client.DecreaseStock(context.Background(), req)
 }

@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"context"
@@ -8,15 +8,19 @@ import (
 	"github.com/arifseft/go-grpc-micro/order-svc/pkg/db"
 	"github.com/arifseft/go-grpc-micro/order-svc/pkg/models"
 	"github.com/arifseft/go-grpc-micro/order-svc/pkg/pb"
+	"github.com/arifseft/go-grpc-micro/order-svc/pkg/repository"
 )
 
 type Server struct {
     H db.Handler
-    ProductSvc client.ProductServiceClient
+    OrderRepo repository.IOrderRepository
+    ProductSvc client.IProductServiceClient
 }
 
 func (s *Server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
-    product, err := s.ProductSvc.FindOne(req.ProductId)
+    product, err := s.ProductSvc.FindOne(&pb.FindOneRequest{
+        Id: req.ProductId,
+    })
 
     if err != nil {
         return &pb.CreateOrderResponse{
@@ -41,9 +45,19 @@ func (s *Server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*
         UserId: req.UserId,
     }
 
-    s.H.DB.Create(&order)
+    result, err := s.OrderRepo.CreateOrder(&order)
 
-    res, err := s.ProductSvc.DecreaseStock(req.ProductId, order.Id)
+    if err != nil {
+        return &pb.CreateOrderResponse{
+            Status: http.StatusConflict,
+            Error: err.Error(),
+        }, err
+    }
+
+    res, err := s.ProductSvc.DecreaseStock(&pb.DecreaseStockRequest{
+        Id: req.ProductId,
+        OrderId: order.Id,
+    })
 
     if err != nil {
         return &pb.CreateOrderResponse{
@@ -61,6 +75,6 @@ func (s *Server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*
 
     return &pb.CreateOrderResponse{
         Status: http.StatusCreated,
-        Id: order.Id,
+        Id: result.Id,
     }, nil
 }
